@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CRM NowMed</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{--bg:#f4f7fa;--card:#fff;--tx:#1b2733;--mut:#667685;--line:#d9e1e8;--navy:#29266b;--teal:#0b8fa8;--soft:#eaf2f8;--ok:#1e8449;--err:#c0392b;--warn:#9c640c;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#12181f;--card:#1b242d;--tx:#e8eef3;--mut:#93a3b1;--line:#2d3a46;--navy:#3a3790;--teal:#0b8fa8;--soft:#223241;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 Arial,sans-serif}
+button,select,input,textarea{font:inherit;color:var(--tx)}
+.btn,nav button{border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:8px;cursor:pointer}
+.btn.p,nav button.on{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:bold}
+.btn.g{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.d{background:var(--err);border-color:var(--err);color:#fff}
+.btn.sm{padding:3px 8px;font-size:12px}
+header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;flex:1;min-width:140px}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+main{max-width:1250px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+input,select,textarea{padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);min-width:0}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th{background:var(--navy);color:#fff;text-align:left;padding:8px;font-size:12px;white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tg{padding:2px 8px;border-radius:10px;font-size:12px;font-weight:bold;white-space:nowrap;background:var(--soft)}
+.Agendada{background:#d6eaf8;color:#1b4f72}.Confirmada{background:#d1f2eb;color:#0e6251}
+.Realizada{background:#d5f5e3;color:#1e8449}.Cancelada{background:#fadbd8;color:#922b21}
+.Remarcada{background:#fdebd0;color:#9c640c}
+.late{color:var(--err);font-weight:bold}.hide{display:none!important}
+.note{font-size:12px;color:var(--mut)}.empty{text-align:center;color:var(--mut);padding:22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--soft);border-radius:10px;padding:12px;text-align:center}
+.kpi b{display:block;font-size:26px}.kpi span{font-size:12px;color:var(--mut)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+h2{font-size:15px;margin:0 0 10px}
+.hb{display:flex;align-items:center;gap:8px;margin:6px 0}
+.hb i{width:140px;font-style:normal;font-size:12px}
+.hb div{flex:1;background:var(--soft);border-radius:4px;height:20px}
+.hb span{display:block;height:100%;border-radius:4px;background:var(--teal)}
+.mo{display:flex;align-items:flex-end;gap:6px;height:150px}
+.mo div{flex:1;text-align:center;font-size:11px;color:var(--mut);display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.mo span{display:block;background:var(--teal);border-radius:3px 3px 0 0}
+.kb{display:flex;gap:10px;overflow-x:auto;align-items:flex-start;padding-bottom:10px}
+.col{min-width:220px;flex:1;background:var(--soft);border-radius:10px;padding:8px}
+.col h3{font-size:13px;margin:2px 4px 8px}
+.kc{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px;cursor:pointer}
+.kc small{display:block;color:var(--mut)}.kc button{margin:6px 4px 0 0;padding:2px 10px}
+.kc:hover{box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.kf{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.av{width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold}
+.dt{font-size:11px;padding:1px 6px;border-radius:8px;background:var(--soft)}
+.dt.r{background:#fadbd8;color:#922b21}.dt.y{background:#fcf3cf;color:#7d6608}.dt.g{background:#d5f5e3;color:#1e8449}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9;align-items:center;justify-content:center;padding:12px;overflow:auto}
+.ov.show{display:flex}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
+.w{grid-column:1/-1}
+body.nog .gestor-only{display:none!important}
+header{position:fixed;left:0;top:0;bottom:0;width:190px;flex-direction:column;align-items:stretch;padding:16px 10px;gap:14px;z-index:5}
+header h1{flex:none;font-size:17px;padding:0 6px}
+nav{flex-direction:column;flex:1;overflow-y:auto}
+nav button{background:transparent;border:0;color:#cfe0f3;text-align:left;padding:10px 12px;border-radius:8px}
+nav button.on{background:rgba(255,255,255,.18);color:#fff}
+#so{margin-top:auto}
+main{margin-left:190px}
+.brand{padding:4px 6px}.brand b{color:#fff;font-size:20px}.brand b i{color:#07e9f7;font-style:normal}
+.brand small{display:block;letter-spacing:3px;color:#07e9f7;font-weight:bold;font-size:11px;margin-top:4px}
+.userbox{display:flex;gap:8px;align-items:center;padding:8px;background:rgba(255,255,255,.1);border-radius:8px;font-size:12px;color:#cfe0f3}
+.userbox .av{background:#07e9f7;color:var(--navy)}
+#lo{display:flex;position:fixed;inset:0;background:#29266b;z-index:20;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px}
+#lo .lg{width:220px;text-align:center}
+#lo .lg h1{color:#fff;font-size:22px;margin:0 0 4px}
+#lo .lg small{color:#07e9f7;letter-spacing:4px;font-weight:bold;font-size:11px}
+#lo form{background:#fff;padding:20px;border-radius:12px;display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px}
+#lo input{border:1px solid #d9e1e8;color:#1b2733;background:#fff;padding:10px;border-radius:8px}
+#lo button[type=submit]{background:var(--teal);color:#fff;border:0;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer}
+#lo .msg{font-size:12px;color:#c0392b;min-height:16px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:50;opacity:0;transform:translateY(20px);transition:.25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}.toast.err{background:var(--err)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.cal .h{background:var(--navy);color:#fff;padding:6px;text-align:center;font-size:12px}
+.cal .d{background:var(--card);min-height:80px;padding:4px;font-size:12px;cursor:pointer}
+.cal .d.out{background:var(--soft);color:var(--mut)}
+.cal .d.sel{outline:2px solid var(--teal);outline-offset:-2px}
+.cal .d .n{font-weight:bold;font-size:12px;display:block;margin-bottom:2px}
+.cal .d .ev{background:var(--teal);color:#fff;border-radius:4px;padding:1px 4px;font-size:10px;display:block;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:var(--card);padding:7px 14px;border-radius:8px;cursor:pointer}
+.tabs button.on{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:bold}
+.hist{padding:10px;border-left:3px solid var(--teal);margin-bottom:8px;background:var(--soft);border-radius:6px}
+.hist b{display:block}.hist small{color:var(--mut)}
+@media(max-width:760px){
+  header{position:static;width:auto;flex-direction:row;flex-wrap:wrap;padding:10px}
+  nav{flex-direction:row;flex-wrap:wrap}#so{margin-top:0}main{margin-left:0}
+}
+</style>
+</head>
+<body class="hide">
+
+<!-- LOGIN -->
+<div id="lo">
+  <div class="lg">
+    <h1>CRM NowMed</h1>
+    <small>GESTÃO CLÍNICA</small>
+  </div>
+  <form id="loginForm">
+    <input type="email" id="loginEmail" placeholder="E-mail" required autocomplete="username">
+    <div style="position:relative">
+      <input type="password" id="loginSenha" placeholder="Senha" required autocomplete="current-password" style="width:100%;padding-right:38px">
+      <button type="button" id="toggleSenha" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;font-size:16px;color:#667685;padding:4px 8px" aria-label="Mostrar senha">👁️</button>
+    </div>
+    <button type="submit">Entrar</button>
+    <button type="button" id="btnEsqueciSenha" style="background:none;border:0;color:#0b8fa8;cursor:pointer;font-size:13px;text-decoration:underline;padding:4px">Esqueci minha senha</button>
+    <div class="msg" id="loginMsg"></div>
+  </form>
+</div>
+
+<!-- APP -->
+<header class="hide" id="appHeader">
+  <div class="brand">
+    <b>Now<i>Med</i></b>
+    <small>GESTÃO CLÍNICA</small>
+  </div>
+  <div class="userbox" id="userBox">
+    <span class="av" id="userAv">?</span>
+    <div style="flex:1;min-width:0">
+      <div id="userNome" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Usuário</div>
+      <div id="userRole" style="font-size:10px;opacity:.8">—</div>
+    </div>
+  </div>
+  <nav id="mainNav">
+    <button data-view="dashboard">📊 Painel</button>
+    <button data-view="negociacoes">💼 Negociações</button>
+    <button data-view="agenda">📅 Agendas</button>
+    <button data-view="historico">🧾 Histórico</button>
+    <button data-view="usuarios" class="gestor-only">🔐 Responsáveis</button>
+    <button data-view="gestor" class="gestor-only">📈 Painel Gestor</button>
+  </nav>
+  <button id="so" class="btn" style="background:transparent;color:#cfe0f3;border-color:rgba(255,255,255,.25)">Sair</button>
+</header>
+
+<main id="appMain" class="hide">
+
+  <!-- PAINEL -->
+  <section data-page="dashboard">
+    <div class="bar">
+      <select id="dashPeriodo">
+        <option value="7">Últimos 7 dias</option>
+        <option value="30" selected>Últimos 30 dias</option>
+        <option value="90">Últimos 90 dias</option>
+        <option value="mes">Mês atual</option>
+      </select>
+      <select id="dashProf" class="gestor-only"><option value="">Todos os responsáveis</option></select>
+    </div>
+    <div class="grid" id="dashKpis"></div>
+    <div class="cols">
+      <div class="card"><h2>Reuniões por mês (6 meses)</h2><div class="mo" id="dashTrend"></div></div>
+      <div class="card"><h2>Reuniões realizadas por responsável</h2><div id="dashPorResp"></div></div>
+    </div>
+  </section>
+
+  <!-- NEGOCIAÇÕES -->
+  <section data-page="negociacoes" class="hide">
+    <div class="bar">
+      <input id="negBusca" placeholder="Buscar empresa, contato..." style="flex:1;min-width:200px">
+      <button class="btn p" id="btnNovaNeg">+ Nova negociação</button>
+    </div>
+    <div class="kb" id="negBoard"></div>
+  </section>
+
+  <!-- AGENDAS -->
+  <section data-page="agenda" class="hide">
+    <div class="tabs" id="agTabs">
+      <button data-tab="futuras" class="on">Reuniões futuras</button>
+      <button data-tab="realizadas">Reuniões realizadas</button>
+    </div>
+    <div id="agPaneFuturas">
+      <div class="bar">
+        <button class="btn" id="calPrev">‹</button>
+        <b id="calTitle" style="min-width:180px;text-align:center"></b>
+        <button class="btn" id="calNext">›</button>
+        <button class="btn" id="calToday">Hoje</button>
+        <input id="agBusca" placeholder="Buscar empresa/contato..." style="flex:1;min-width:180px">
+        <button class="btn p" id="btnNovaReuniao">+ Nova reunião</button>
+      </div>
+      <div class="cal" id="calGrid"></div>
+      <div class="card" style="margin-top:14px">
+        <h2 id="agDiaTitulo">Reuniões do dia</h2>
+        <div class="wrap"><table>
+          <thead><tr><th>Hora</th><th>Empresa/Clínica</th><th>Contato</th><th>Responsável</th><th>Tipo</th><th>Link</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="agDiaTbody"><tr><td colspan="8" class="empty">Selecione um dia no calendário.</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+    <div id="agPaneRealizadas" class="hide">
+      <div class="card">
+        <div class="bar">
+          <select id="agRealFiltro" class="gestor-only"><option value="">Todos os responsáveis</option></select>
+        </div>
+        <div class="wrap"><table>
+          <thead><tr><th>Data</th><th>Empresa/Clínica</th><th>Contato</th><th>Responsável</th><th>Tipo</th><th>Resultado</th><th>Ações</th></tr></thead>
+          <tbody id="agRealTbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTÓRICO -->
+  <section data-page="historico" class="hide">
+    <div class="bar">
+      <select id="histNegSel" style="flex:1;min-width:260px"><option value="">Selecione uma negociação...</option></select>
+    </div>
+    <div class="card"><div id="histLista"><div class="empty">Selecione uma negociação para ver o histórico.</div></div></div>
+  </section>
+
+  <!-- RESPONSÁVEIS (gestor) -->
+  <section data-page="usuarios" class="hide gestor-only">
+    <div class="bar">
+      <input id="usrBusca" placeholder="Buscar responsável..." style="flex:1;min-width:180px">
+      <button class="btn p" id="btnNovoUsr">+ Novo responsável</button>
+    </div>
+    <div class="card"><div class="wrap"><table>
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Ativo</th><th>Ações</th></tr></thead>
+      <tbody id="usrTbody"></tbody>
+    </table></div></div>
+  </section>
+
+  <!-- PAINEL DO GESTOR -->
+  <section data-page="gestor" class="hide gestor-only">
+    <div class="bar">
+      <select id="gFiltroResp"><option value="">Todos os responsáveis</option></select>
+      <input type="date" id="gDe"><input type="date" id="gAte">
+      <button class="btn" id="gAplicar">Aplicar filtros</button>
+    </div>
+    <div class="grid" id="gKpis"></div>
+    <div class="cols">
+      <div class="card"><h2>Reuniões realizadas por responsável</h2><div id="gPorResp"></div></div>
+      <div class="card"><h2>Negociações sem atualização (7+ dias)</h2>
+        <div class="wrap"><table><thead><tr><th>Empresa</th><th>Responsável</th><th>Última interação</th><th>Status</th></tr></thead>
+        <tbody id="gParadas"></tbody></table></div>
+      </div>
+    </div>
+    <div class="card"><h2>Próximos follow-ups (7 dias)</h2>
+      <div class="wrap"><table><thead><tr><th>Empresa</th><th>Responsável</th><th>Próximo contato</th></tr></thead>
+      <tbody id="gFollow"></tbody></table></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODAL -->
+<div class="ov" id="ovModal">
+  <div class="card" style="max-width:820px;width:100%;max-height:92vh;overflow:auto">
+    <div class="bar" style="justify-content:space-between">
+      <h2 id="modalTitulo" style="margin:0">—</h2>
+      <button class="btn sm" id="modalFechar">✕</button>
+    </div>
+    <div id="modalCorpo"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   1. FIREBASE — substitua pelas suas credenciais
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  projectId: "SEU_PROJETO",
+  storageBucket: "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
+const Timestamp = firebase.firestore.Timestamp;
+
+/* ============================================================
+   2. UTILITÁRIOS
+   ============================================================ */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ini = s => (s||'?').trim().slice(0,2).toUpperCase();
+const toDate = v => v?.toDate ? v.toDate() : (v ? new Date(v) : null);
+const fmtDt = d => { const x = toDate(d); return x ? x.toLocaleDateString('pt-BR') : '—'; };
+const fmtDtH = d => { const x = toDate(d); return x ? x.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}) : '—'; };
+const ymd = d => new Date(d).toISOString().slice(0,10);
+const isSameDay = (a,b)=> a && b && a.toDateString()===b.toDateString();
+
+function toast(msg, err=false){
+  const t = $('#toast'); t.textContent = msg;
+  t.classList.toggle('err', err); t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function abrirModal(titulo, html){
+  $('#modalTitulo').textContent = titulo;
+  $('#modalCorpo').innerHTML = html;
+  $('#ovModal').classList.add('show');
+}
+function fecharModal(){ $('#ovModal').classList.remove('show'); $('#modalCorpo').innerHTML=''; }
+$('#modalFechar').onclick = fecharModal;
+
+/* ============================================================
+   3. PERFIS E PERMISSÕES
+   ============================================================ */
+const PERM = {
+  gestor:      ['dashboard','negociacoes','agenda','historico','usuarios','gestor'],
+  responsavel: ['dashboard','negociacoes','agenda','historico']
+};
+const ROLE_LABEL = { gestor:'Gestor', responsavel:'Responsável' };
+const STATUS_NEG = ['Prospecção','Contato feito','Reunião agendada','Proposta enviada','Em negociação','Ganha','Perdida'];
+
+let USUARIO = null;
+let CACHE = { negociacoes:[], agendas:[], relatorios:[], usuarios:[], historico:[] };
+let UNSUB_USER = null;
+
+function isGestor(){ return USUARIO?.perfil === 'gestor'; }
+function aplicarPermissoes(){
+  $$('#mainNav button[data-view]').forEach(b=>{
+    b.classList.toggle('hide', !PERM[USUARIO.perfil]?.includes(b.dataset.view));
+  });
+  document.body.classList.toggle('nog', USUARIO.perfil !== 'gestor');
+}
+
+/* ============================================================
+   4. AUTENTICAÇÃO E LOGIN
+   ============================================================ */
+auth.onAuthStateChanged(async user=>{
+  if(!user){ mostrarLogin(); return; }
+  try{
+    const snap = await db.collection('users').doc(user.uid).get();
+    let dados = snap.exists ? snap.data() : null;
+    if(!dados){
+      // Primeiro acesso: se não houver nenhum usuário no sistema, é gestor.
+      const total = await db.collection('users').get();
+      const perfil = total.empty ? 'gestor' : 'responsavel';
+      dados = {
+        nome: user.displayName || user.email.split('@')[0],
+        email: user.email, perfil,
+        ativo: total.empty ? true : false,
+        criadoEm: serverTimestamp()
+      };
+      await db.collection('users').doc(user.uid).set(dados);
+      if(perfil !== 'gestor'){
+        toast('Acesso criado. Aguarde ativação pelo gestor.', true);
+        await auth.signOut(); return;
+      }
+    }
+    if(dados.ativo === false){ toast('Usuário inativo', true); await auth.signOut(); return; }
+    USUARIO = { uid:user.uid, ...dados };
+    await db.collection('users').doc(user.uid).update({ ultimoAcesso: serverTimestamp() });
+    await iniciarApp();
+  }catch(e){ console.error(e); toast('Erro ao carregar perfil', true); mostrarLogin(); }
+});
+
+function mostrarLogin(){
+  $('#lo').style.display='flex';
+  document.body.classList.add('hide');
+  $('#appHeader').classList.add('hide');
+  $('#appMain').classList.add('hide');
+}
+
+$('#loginForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  $('#loginMsg').textContent = '';
+  try{
+    await auth.signInWithEmailAndPassword($('#loginEmail').value.trim(), $('#loginSenha').value);
+  }catch(err){
+    const map = {
+      'auth/invalid-email':'E-mail inválido.','auth/user-not-found':'Usuário não encontrado.',
+      'auth/wrong-password':'Senha incorreta.','auth/invalid-credential':'Credenciais inválidas.'
+    };
+    $('#loginMsg').textContent = map[err.code] || 'Erro ao entrar.';
+  }
+});
+
+$('#toggleSenha').onclick = () => {
+  const inp = $('#loginSenha');
+  const mostrar = inp.type === 'password';
+  inp.type = mostrar ? 'text' : 'password';
+  $('#toggleSenha').textContent = mostrar ? '🙈' : '👁️';
+};
+
+$('#btnEsqueciSenha').onclick = async () => {
+  const email = prompt('Informe seu e-mail para receber o link de redefinição:');
+  if (!email) return;
+  try {
+    await auth.sendPasswordResetEmail(email.trim());
+    $('#loginMsg').style.color = '#1e8449';
+    $('#loginMsg').textContent = 'Link enviado! Verifique sua caixa de entrada.';
+  } catch (err) {
+    const map = { 'auth/user-not-found':'E-mail não cadastrado.','auth/invalid-email':'E-mail inválido.' };
+    $('#loginMsg').style.color = '#c0392b';
+    $('#loginMsg').textContent = map[err.code] || 'Não foi possível enviar o link.';
+  }
+};
+
+$('#so').onclick = async () => {
+  CACHE = { negociacoes:[], agendas:[], relatorios:[], usuarios:[], historico:[] };
+  USUARIO = null;
+  if(UNSUB_USER){ UNSUB_USER(); UNSUB_USER = null; }
+  await auth.signOut();
+  location.reload();
+};
+
+/* ============================================================
+   5. INICIALIZAÇÃO
+   ============================================================ */
+async function iniciarApp(){
+  $('#lo').style.display='none';
+  document.body.classList.remove('hide');
+  $('#appHeader').classList.remove('hide');
+  $('#appMain').classList.remove('hide');
+  $('#userAv').textContent = ini(USUARIO.nome);
+  $('#userNome').textContent = USUARIO.nome;
+  $('#userRole').textContent = ROLE_LABEL[USUARIO.perfil] || USUARIO.perfil;
+  aplicarPermissoes();
+  configurarNavegacao();
+  await carregarCache();
+  configurarListeners();
+  vigiarDesativacao();
+  renderDashboard();
+  configurarCalendario();
+  renderUsuarios();
+  renderNegociacoes();
+  renderPainelGestor();
+  navegar(PERM[USUARIO.perfil][0]);
+}
+
+function configurarNavegacao(){
+  $$('#mainNav button[data-view]').forEach(b=> b.onclick = ()=> navegar(b.dataset.view));
+}
+function navegar(view){
+  if(!USUARIO){ mostrarLogin(); return; }
+  if((view==='usuarios' || view==='gestor') && !isGestor()){
+    toast('Acesso restrito ao gestor.', true); return;
+  }
+  if(!PERM[USUARIO.perfil]?.includes(view)){
+    toast('Você não tem permissão para acessar esta área.', true); return;
+  }
+  $$('#mainNav button[data-view]').forEach(b=> b.classList.toggle('on', b.dataset.view===view));
+  $$('main [data-page]').forEach(s=> s.classList.toggle('hide', s.dataset.page!==view));
+  if(view==='historico') renderHistoricoPage();
+  if(view==='gestor') renderPainelGestor();
+  if(view==='agenda') renderAgendaTab();
+}
+
+function vigiarDesativacao(){
+  if(UNSUB_USER) UNSUB_USER();
+  UNSUB_USER = db.collection('users').doc(USUARIO.uid).onSnapshot(snap=>{
+    if(!snap.exists){ toast('Conta removida.', true); auth.signOut(); return; }
+    if(snap.data().ativo === false){
+      toast('Sua conta foi desativada pelo gestor.', true);
+      auth.signOut();
+      setTimeout(()=>location.reload(), 900);
+    }
+  });
+}
+
+/* ============================================================
+   6. CARREGAR DADOS
+   ============================================================ */
+function queryCol(col){
+  let q = db.collection(col);
+  if(!isGestor()) q = q.where('responsavelId','==', USUARIO.uid);
+  return q;
+}
+
+async function carregarCache(){
+  const [neg, ag, rel, usr] = await Promise.all([
+    queryCol('negociacoes').limit(2000).get(),
+    queryCol('agendas').limit(2000).get(),
+    queryCol('relatoriosReuniao').limit(2000).get().catch(()=>({docs:[]})),
+    db.collection('users').get()
+  ]);
+  CACHE.negociacoes = neg.docs.map(d=>({id:d.id,...d.data()}));
+  CACHE.agendas     = ag.docs.map(d=>({id:d.id,...d.data()}));
+  CACHE.relatorios  = rel.docs.map(d=>({id:d.id,...d.data()}));
+  CACHE.usuarios    = usr.docs.map(d=>({id:d.id,...d.data()}));
+
+  const resp = CACHE.usuarios.filter(u=>u.perfil==='responsavel' || u.perfil==='gestor');
+  const opts = resp.map(u=>`<option value="${u.id}">${esc(u.nome)}</option>`).join('');
+  ['#dashProf','#gFiltroResp','#agRealFiltro'].forEach(sel=>{
+    const el = $(sel); if(!el) return;
+    const primeiro = el.options[0].textContent;
+    el.innerHTML = `<option value="">${primeiro}</option>${opts}`;
+  });
+  $('#histNegSel').innerHTML = `<option value="">Selecione uma negociação...</option>` +
+    CACHE.negociacoes.map(n=>`<option value="${n.id}">${esc(n.empresa)} — ${esc(n.responsavelNome||'')}</option>`).join('');
+  $('#dashProf').onchange = renderDashboard;
+  $('#dashPeriodo').onchange = renderDashboard;
+}
+
+function configurarListeners(){
+  queryCol('negociacoes').onSnapshot(snap=>{
+    CACHE.negociacoes = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderDashboard(); renderNegociacoes(); renderPainelGestor();
+  }, e=>console.error(e));
+  queryCol('agendas').onSnapshot(snap=>{
+    CACHE.agendas = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderDashboard(); renderCalendario(); renderAgendaTab(); renderPainelGestor();
+  }, e=>console.error(e));
+  queryCol('relatoriosReuniao').onSnapshot(snap=>{
+    CACHE.relatorios = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAgendaTab(); renderPainelGestor();
+  }, e=>console.error(e));
+}
+
+/* ============================================================
+   7. DASHBOARD
+   ============================================================ */
+function filtrarPeriodo(lista, valor, campo){
+  const agora = new Date();
+  let ini;
+  if(valor==='mes') ini = new Date(agora.getFullYear(), agora.getMonth(), 1);
+  else ini = new Date(agora.getTime() - Number(valor)*864e5);
+  return lista.filter(x=>{
+    const d = toDate(x[campo]);
+    return d && d>=ini && d<=agora;
+  });
+}
+
+function renderDashboard(){
+  const resp = $('#dashProf')?.value || '';
+  const per = $('#dashPeriodo')?.value || '30';
+  let negs = filtrarPeriodo(CACHE.negociacoes, per, 'criadoEm');
+  let ags  = filtrarPeriodo(CACHE.agendas, per, 'dataHora');
+  if(resp){ negs = negs.filter(n=>n.responsavelId===resp); ags = ags.filter(a=>a.responsavelId===resp); }
+
+  const agora = new Date();
+  const futuras = ags.filter(a=>a.status==='Agendada' && toDate(a.dataHora)>=agora).length;
+  const realizadas = ags.filter(a=>a.status==='Realizada').length;
+  const ganhas = negs.filter(n=>n.status==='Ganha').length;
+
+  $('#dashKpis').innerHTML = `
+    <div class="kpi"><b>${negs.length}</b><span>Negociações</span></div>
+    <div class="kpi"><b>${futuras}</b><span>Reuniões futuras</span></div>
+    <div class="kpi"><b>${realizadas}</b><span>Reuniões realizadas</span></div>
+    <div class="kpi"><b>${ganhas}</b><span>Negociações ganhas</span></div>`;
+
+  // Tendência 6 meses
+  const meses = [];
+  for(let i=5;i>=0;i--){
+    const d = new Date(agora.getFullYear(), agora.getMonth()-i, 1);
+    meses.push({ rotulo: d.toLocaleDateString('pt-BR',{month:'short'}), ini: d, fim: new Date(d.getFullYear(), d.getMonth()+1, 1) });
+  }
+  let maxMes = 1;
+  const totais = meses.map(m=>{
+    const qtd = CACHE.agendas.filter(a=>{
+      const d = toDate(a.dataHora); return d && d>=m.ini && d<m.fim;
+    }).length;
+    if(qtd > maxMes) maxMes = qtd;
+    return qtd;
+  });
+  $('#dashTrend').innerHTML = meses.map((m,i)=>{
+    const h = Math.max(4, (totais[i]/maxMes)*100);
+    return `<div><span style="height:${h}%;width:100%"></span>${m.rotulo}</div>`;
+  }).join('');
+
+  // Por responsável
+  const porResp = {};
+  ags.filter(a=>a.status==='Realizada').forEach(a=>{
+    const k = a.responsavelNome || a.responsavelId || '—';
+    porResp[k] = (porResp[k]||0)+1;
+  });
+  const maxR = Math.max(1, ...Object.values(porResp));
+  $('#dashPorResp').innerHTML = Object.keys(porResp).length
+    ? Object.entries(porResp).map(([n,v])=>`<div class="hb"><i>${esc(n)}</i><div><span style="width:${v/maxR*100}%"></span></div>${v}</div>`).join('')
+    : '<div class="empty">Sem dados</div>';
+}
+
+/* ============================================================
+   8. NEGOCIAÇÕES (KANBAN)
+   ============================================================ */
+function renderNegociacoes(){
+  const busca = ($('#negBusca')?.value||'').toLowerCase();
+  const filtradas = CACHE.negociacoes.filter(n=>
+    !busca || (n.empresa||'').toLowerCase().includes(busca) || (n.contato||'').toLowerCase().includes(busca)
+  );
+  const board = $('#negBoard'); if(!board) return;
+  board.innerHTML = STATUS_NEG.map((st,idx)=>{
+    const itens = filtradas.filter(n=>n.status===st);
+    return `<div class="col">
+      <h3>${st} <span class="note">(${itens.length})</span></h3>
+      ${itens.map(n=>`
+        <div class="kc" onclick="abrirNegociacao('${n.id}')">
+          <b>${esc(n.empresa||'—')}</b>
+          <small>${esc(n.contato||'')} · ${esc(n.responsavelNome||'')}</small>
+          <small>Atualizado: ${fmtDt(n.ultimaInteracaoEm || n.atualizadoEm)}</small>
+        </div>`).join('') || '<div class="empty">—</div>'}
+    </div>`;
+  }).join('');
+}
+$('#negBusca')?.addEventListener('input', renderNegociacoes);
+
+$('#btnNovaNeg')?.addEventListener('click', ()=>{
+  abrirModal('Nova negociação', `
+    <div class="form" id="negForm">
+      <label>Empresa/Clínica<input name="empresa" required></label>
+      <label>Contato<input name="contato"></label>
+      <label>Telefone<input name="telefone"></label>
+      <label>E-mail<input name="email"></label>
+      <label>Status<select name="status">${STATUS_NEG.map(s=>`<option>${s}</option>`).join('')}</select></label>
+      <label class="w">Observações<textarea name="observacoes" rows="2"></textarea></label>
+    </div>
+    <div class="bar" style="margin-top:12px"><button class="btn p" id="negSalvar">Salvar</button></div>`);
+  $('#negSalvar').onclick = async ()=>{
+    const f = $('#negForm');
+    if(!f.empresa.value.trim()) return toast('Informe a empresa', true);
+    await db.collection('negociacoes').add({
+      empresa: f.empresa.value.trim(), contato: f.contato.value, telefone: f.telefone.value,
+      email: f.email.value, status: f.status.value, observacoes: f.observacoes.value,
+      responsavelId: USUARIO.uid, responsavelNome: USUARIO.nome,
+      criadoEm: serverTimestamp(), atualizadoEm: serverTimestamp(),
+      ultimaInteracaoEm: serverTimestamp()
+    });
+    await logAuditoria('negociacao_criada', `Negociação ${f.empresa.value.trim()} criada`);
+    fecharModal(); toast('Negociação criada.');
+  };
+});
+
+async function abrirNegociacao(id){
+  const n = CACHE.negociacoes.find(x=>x.id===id); if(!n) return;
+  abrirModal(`Negociação — ${esc(n.empresa)}`, `
+    <div class="form" id="negEditForm">
+      <label>Empresa<input name="empresa" value="${esc(n.empresa||'')}"></label>
+      <label>Contato<input name="contato" value="${esc(n.contato||'')}"></label>
+      <label>Telefone<input name="telefone" value="${esc(n.telefone||'')}"></label>
+      <label>E-mail<input name="email" value="${esc(n.email||'')}"></label>
+      <label>Status<select name="status">${STATUS_NEG.map(s=>`<option ${s===n.status?'selected':''}>${s}</option>`).join('')}</select></label>
+      <label>Responsável<input value="${esc(n.responsavelNome||'')}" readonly></label>
+      <label class="w">Observações<textarea name="observacoes" rows="2">${esc(n.observacoes||'')}</textarea></label>
+    </div>
+    <div class="bar" style="margin-top:12px">
+      <button class="btn p" id="negAtualizar">Salvar alterações</button>
+      <button class="btn" id="negVerHist">Ver histórico</button>
+    </div>`);
+  $('#negAtualizar').onclick = async ()=>{
+    const f = $('#negEditForm');
+    await db.collection('negociacoes').doc(id).update({
+      empresa: f.empresa.value, contato: f.contato.value, telefone: f.telefone.value,
+      email: f.email.value, status: f.status.value, observacoes: f.observacoes.value,
+      atualizadoEm: serverTimestamp(), ultimaInteracaoEm: serverTimestamp()
+    });
+    await logHistorico(id, n.responsavelId, 'nota', 'Negociação atualizada');
+    fecharModal(); toast('Atualizado.');
+  };
+  $('#negVerHist').onclick = ()=>{ fecharModal(); navegar('historico'); $('#histNegSel').value = id; renderHistoricoPage(); };
+}
+
+/* ============================================================
+   9. AGENDAS (CALENDÁRIO + FUTURAS/REALIZADAS)
+   ============================================================ */
+let CAL = { ano: new Date().getFullYear(), mes: new Date().getMonth(), diaSel: new Date() };
+
+function configurarCalendario(){
+  $('#calPrev').onclick = ()=>{ CAL.mes--; if(CAL.mes<0){CAL.mes=11;CAL.ano--;} renderCalendario(); };
+  $('#calNext').onclick = ()=>{ CAL.mes++; if(CAL.mes>11){CAL.mes=0;CAL.ano++;} renderCalendario(); };
+  $('#calToday').onclick = ()=>{ CAL.ano=new Date().getFullYear(); CAL.mes=new Date().getMonth(); CAL.diaSel=new Date(); renderCalendario(); };
+  $$('#agTabs button').forEach(b=> b.onclick = ()=>{
+    $$('#agTabs button').forEach(x=>x.classList.toggle('on', x===b));
+    const tab = b.dataset.tab;
+    $('#agPaneFuturas').classList.toggle('hide', tab!=='futuras');
+    $('#agPaneRealizadas').classList.toggle('hide', tab!=='realizadas');
+    if(tab==='realizadas') renderAgendaRealizadas();
+  });
+  $('#agRealFiltro').onchange = renderAgendaRealizadas;
+  $('#calGrid').addEventListener('click', e=>{
+    const d = e.target.closest('.d');
+    if(!d) return;
+    CAL.diaSel = new Date(Number(d.dataset.ano), Number(d.dataset.mes), Number(d.dataset.dia));
+    renderCalendario();
+  });
+  $('#btnNovaReuniao').onclick = abrirNovaReuniao;
+  renderCalendario();
+}
+
+function renderAgendaTab(){
+  const realizadasOn = !$('#agPaneRealizadas').classList.contains('hide');
+  if(realizadasOn) renderAgendaRealizadas(); else renderCalendario();
+}
+
+function renderCalendario(){
+  const grid = $('#calGrid'); if(!grid) return;
+  $('#calTitle').textContent = new Date(CAL.ano, CAL.mes, 1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const diasSem = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  let html = diasSem.map(d=>`<div class="h">${d}</div>`).join('');
+  const primeiro = new Date(CAL.ano, CAL.mes, 1);
+  const inicio = new Date(primeiro); inicio.setDate(1 - primeiro.getDay());
+  for(let i=0;i<42;i++){
+    const d = new Date(inicio); d.setDate(inicio.getDate()+i);
+    const fora = d.getMonth()!==CAL.mes;
+    const sel = isSameDay(d, CAL.diaSel);
+    const evs = CACHE.agendas.filter(a=>{
+      const dd = toDate(a.dataHora); return dd && isSameDay(dd, d);
+    });
+    html += `<div class="d ${fora?'out':''} ${sel?'sel':''}" data-ano="${d.getFullYear()}" data-mes="${d.getMonth()}" data-dia="${d.getDate()}">
+      <span class="n">${d.getDate()}</span>
+      ${evs.slice(0,3).map(a=>`<span class="ev">${toDate(a.dataHora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} ${esc(a.empresa||'')}</span>`).join('')}
+    </div>`;
+  }
+  grid.innerHTML = html;
+  renderDiaTabela();
+}
+
+function renderDiaTabela(){
+  const tb = $('#agDiaTbody'); if(!tb) return;
+  $('#agDiaTitulo').textContent = 'Reuniões de ' + CAL.diaSel.toLocaleDateString('pt-BR');
+  const busca = ($('#agBusca')?.value||'').toLowerCase();
+  const lista = CACHE.agendas
+    .filter(a=>{ const d=toDate(a.dataHora); return d && isSameDay(d, CAL.diaSel); })
+    .filter(a=> !busca || (a.empresa||'').toLowerCase().includes(busca) || (a.contato||'').toLowerCase().includes(busca))
+    .sort((a,b)=> toDate(a.dataHora) - toDate(b.dataHora));
+  if(!lista.length){ tb.innerHTML = '<tr><td colspan="8" class="empty">Sem reuniões neste dia.</td></tr>'; return; }
+  tb.innerHTML = lista.map(a=>`
+    <tr>
+      <td>${toDate(a.dataHora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${esc(a.empresa||'—')}</td>
+      <td>${esc(a.contato||'—')}</td>
+      <td>${esc(a.responsavelNome||'—')}</td>
+      <td>${esc(a.tipo||'—')}</td>
+      <td>${a.link?`<a href="${esc(a.link)}" target="_blank" rel="noopener">link</a>`:'—'}</td>
+      <td><span class="tg ${a.status}">${esc(a.status)}</span></td>
+      <td>
+        ${a.status==='Agendada' ? `<button class="btn sm g" onclick="concluirReuniao('${a.id}')">Concluir</button>` : ''}
+        <button class="btn sm" onclick="editarReuniao('${a.id}')">Editar</button>
+      </td>
+    </tr>`).join('');
+}
+$('#agBusca')?.addEventListener('input', renderDiaTabela);
+
+function abrirNovaReuniao(){
+  const agora = new Date();
+  abrirModal('Nova reunião', `
+    <div class="form" id="agForm">
+      <label>Empresa/Clínica<input name="empresa" required></label>
+      <label>Contato<input name="contato"></label>
+      <label>Data e hora<input type="datetime-local" name="dataHora" required value="${new Date(agora.getTime()-agora.getTimezoneOffset()*60000).toISOString().slice(0,16)}"></label>
+      <label>Tipo<select name="tipo"><option>online</option><option>presencial</option><option>telefone</option></select></label>
+      <label>Link (se online)<input name="link"></label>
+      <label class="w">Observações<textarea name="observacoes" rows="2"></textarea></label>
+    </div>
+    <div class="bar" style="margin-top:12px"><button class="btn p" id="agSalvar">Salvar</button></div>`);
+  $('#agSalvar').onclick = async ()=>{
+    const f = $('#agForm');
+    if(!f.empresa.value.trim() || !f.dataHora.value) return toast('Preencha empresa e data', true);
+    await db.collection('agendas').add({
+      empresa: f.empresa.value.trim(), contato: f.contato.value,
+      dataHora: Timestamp.fromDate(new Date(f.dataHora.value)),
+      tipo: f.tipo.value, link: f.link.value, observacoes: f.observacoes.value,
+      status: 'Agendada',
+      responsavelId: USUARIO.uid, responsavelNome: USUARIO.nome,
+      criadoEm: serverTimestamp(), atualizadoEm: serverTimestamp()
+    });
+    fecharModal(); toast('Reunião agendada.');
+  };
+}
+
+async function editarReuniao(id){
+  const a = CACHE.agendas.find(x=>x.id===id); if(!a) return;
+  const dt = toDate(a.dataHora);
+  const local = new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  abrirModal('Editar reunião', `
+    <div class="form" id="agEditForm">
+      <label>Empresa<input name="empresa" value="${esc(a.empresa||'')}"></label>
+      <label>Contato<input name="contato" value="${esc(a.contato||'')}"></label>
+      <label>Data e hora<input type="datetime-local" name="dataHora" value="${local}"></label>
+      <label>Tipo<select name="tipo">${['online','presencial','telefone'].map(t=>`<option ${t===a.tipo?'selected':''}>${t}</option>`).join('')}</select></label>
+      <label>Link<input name="link" value="${esc(a.link||'')}"></label>
+      <label>Status<select name="status">${['Agendada','Confirmada','Realizada','Cancelada','Remarcada'].map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('')}</select></label>
+      <label class="w">Observações<textarea name="observacoes" rows="2">${esc(a.observacoes||'')}</textarea></label>
+    </div>
+    <div class="bar" style="margin-top:12px"><button class="btn p" id="agUpdate">Salvar</button></div>`);
+  $('#agUpdate').onclick = async ()=>{
+    const f = $('#agEditForm');
+    await db.collection('agendas').doc(id).update({
+      empresa: f.empresa.value, contato: f.contato.value,
+      dataHora: Timestamp.fromDate(new Date(f.dataHora.value)),
+      tipo: f.tipo.value, link: f.link.value, status: f.status.value,
+      observacoes: f.observacoes.value, atualizadoEm: serverTimestamp()
+    });
+    fecharModal(); toast('Atualizado.');
+  };
+}
+
+async function concluirReuniao(id){
+  const a = CACHE.agendas.find(x=>x.id===id); if(!a) return;
+  await db.collection('agendas').doc(id).update({
+    status:'Realizada', atualizadoEm: serverTimestamp()
+  });
+  await logHistorico(a.negociacaoId, a.responsavelId, 'reuniao_realizada',
+    `Reunião realizada com ${a.empresa}`, a.responsavelNome);
+  await logAuditoria('reuniao_concluida', `Reunião de ${a.empresa} marcada como realizada`);
+  toast('Reunião concluída.');
+  abrirRelatorio(id);
+}
+
+/* ---- Registro de acompanhamento ---- */
+async function abrirRelatorio(agendaId){
+  const a = CACHE.agendas.find(x=>x.id===agendaId); if(!a) return;
+  const ex = await db.collection('relatoriosReuniao').where('agendaId','==',agendaId).limit(1).get();
+  const r = ex.empty ? {} : ex.docs[0].data();
+  abrirModal('Registro de acompanhamento', `
+    <div class="form" id="relForm">
+      <label>Empresa/Clínica<input name="empresa" value="${esc(a.empresa||'')}" readonly></label>
+      <label>Contato<input name="contato" value="${esc(a.contato||'')}" readonly></label>
+      <label>Responsável<input name="responsavelNome" value="${esc(a.responsavelNome||'')}" readonly></label>
+      <label>Data e hora<input name="dataHora" value="${fmtDtH(a.dataHora)}" readonly></label>
+      <label class="w">Como foi a reunião<textarea name="comoFoi" rows="2">${esc(r.comoFoi||'')}</textarea></label>
+      <label class="w">Principais assuntos<textarea name="assuntos" rows="2">${esc(r.assuntos||'')}</textarea></label>
+      <label class="w">Necessidades identificadas<textarea name="necessidades" rows="2">${esc(r.necessidades||'')}</textarea></label>
+      <label class="w">Oportunidades<textarea name="oportunidades" rows="2">${esc(r.oportunidades||'')}</textarea></label>
+      <label class="w">Resultado<textarea name="resultado" rows="2">${esc(r.resultado||'')}</textarea></label>
+      <label class="w">Próximos passos<textarea name="proximosPassos" rows="2">${esc(r.proximosPassos||'')}</textarea></label>
+      <label>Data próximo contato<input type="date" name="dataProximoContato" value="${r.dataProximoContato?toDate(r.dataProximoContato).toISOString().slice(0,10):''}"></label>
+      <label class="w">Observações<textarea name="observacoes" rows="2">${esc(r.observacoes||'')}</textarea></label>
+    </div>
+    <div class="bar" style="margin-top:12px"><button class="btn p" id="relSalvar">Salvar registro</button></div>`);
+  $('#relSalvar').onclick = async ()=>{
+    const f = $('#relForm');
+    const data = {
+      agendaId, negociacaoId: a.negociacaoId||null, responsavelId: a.responsavelId,
+      empresa: a.empresa, contato: a.contato, responsavelNome: a.responsavelNome,
+      dataHora: a.dataHora,
+      comoFoi:f.comoFoi.value, assuntos:f.assuntos.value,
+      necessidades:f.necessidades.value, oportunidades:f.oportunidades.value,
+      resultado:f.resultado.value, proximosPassos:f.proximosPassos.value,
+      dataProximoContato: f.dataProximoContato.value ? Timestamp.fromDate(new Date(f.dataProximoContato.value)) : null,
+      observacoes:f.observacoes.value,
+      criadoEm: serverTimestamp()
+    };
+    if(ex.empty) await db.collection('relatoriosReuniao').add(data);
+    else await ex.docs[0].ref.update(data);
+    await logHistorico(a.negociacaoId, a.responsavelId, 'relatorio',
+      `Registro da reunião preenchido (${a.empresa})`, a.responsavelNome);
+    fecharModal(); toast('Registro salvo.');
+  };
+}
+
+function renderAgendaRealizadas(){
+  const tb = $('#agRealTbody'); if(!tb) return;
+  const filtro = $('#agRealFiltro')?.value || '';
+  const lista = CACHE.agendas
+    .filter(a=>a.status==='Realizada' && (!filtro || a.responsavelId===filtro))
+    .sort((a,b)=> toDate(b.dataHora) - toDate(a.dataHora));
+  if(!lista.length){ tb.innerHTML = '<tr><td colspan="7" class="empty">Nenhuma reunião realizada.</td></tr>'; return; }
+  tb.innerHTML = lista.map(a=>{
+    const rel = CACHE.relatorios.find(r=>r.agendaId===a.id);
+    return `<tr>
+      <td>${fmtDtH(a.dataHora)}</td>
+      <td>${esc(a.empresa||'—')}</td>
+      <td>${esc(a.contato||'—')}</td>
+      <td>${esc(a.responsavelNome||'—')}</td>
+      <td>${esc(a.tipo||'—')}</td>
+      <td>${esc(rel?.resultado||'—')}</td>
+      <td>
+        <button class="btn sm" onclick="abrirRelatorio('${a.id}')">Registro</button>
+        <button class="btn sm" onclick="verHistorico('${a.negociacaoId||''}')">Histórico</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ============================================================
+   10. HISTÓRICO
+   ============================================================ */
+async function logHistorico(negId, respId, tipo, descricao, autorNome){
+  if(!negId) return;
+  await db.collection('historico').add({
+    negociacaoId: negId, responsavelId: respId || USUARIO.uid, tipo, descricao,
+    dataHora: serverTimestamp(), autorUid: USUARIO.uid, autorNome: autorNome || USUARIO.nome
+  });
+  await db.collection('negociacoes').doc(negId).update({
+    ultimaInteracaoEm: serverTimestamp(), atualizadoEm: serverTimestamp()
+  }).catch(()=>{});
+}
+
+async function verHistorico(negId){
+  if(!negId) return toast('Sem negociação vinculada.', true);
+  navegar('historico');
+  $('#histNegSel').value = negId;
+  renderHistoricoPage();
+}
+
+async function renderHistoricoPage(){
+  const negId = $('#histNegSel')?.value;
+  if(!negId){ $('#histLista').innerHTML = '<div class="empty">Selecione uma negociação.</div>'; return; }
+  const snap = await db.collection('historico').where('negociacaoId','==',negId).orderBy('dataHora','asc').get();
+  const neg = CACHE.negociacoes.find(n=>n.id===negId);
+  const hist = snap.docs.map(d=>d.data());
+  $('#histLista').innerHTML = `
+    <h3>${esc(neg?.empresa||'')} — ${esc(neg?.contato||'')}</h3>
+    <div class="note" style="margin-bottom:10px">Responsável: ${esc(neg?.responsavelNome||'')}</div>
+    ${hist.length ? hist.map(h=>`
+      <div class="hist">
+        <b>${fmtDtH(h.dataHora)} — ${esc(h.tipo)}</b>
+        <div>${esc(h.descricao)}</div>
+        <small>por ${esc(h.autorNome||'')}</small>
+      </div>`).join('') : '<div class="empty">Sem eventos.</div>'}`;
+}
+$('#histNegSel')?.addEventListener('change', renderHistoricoPage);
+
+/* ============================================================
+   11. RESPONSÁVEIS (gestor)
+   ============================================================ */
+function renderUsuarios(){
+  const tb = $('#usrTbody'); if(!tb) return;
+  const busca = ($('#usrBusca')?.value||'').toLowerCase();
+  const lista = CACHE.usuarios.filter(u=> !busca || (u.nome||'').toLowerCase().includes(busca) || (u.email||'').toLowerCase().includes(busca));
+  tb.innerHTML = lista.map(u=>`
+    <tr>
+      <td>${esc(u.nome)}</td>
+      <td>${esc(u.email)}</td>
+      <td><span class="tg">${esc(ROLE_LABEL[u.perfil]||u.perfil)}</span></td>
+      <td><span class="tg ${u.ativo?'Realizada':'Cancelada'}">${u.ativo?'Ativo':'Inativo'}</span></td>
+      <td>
+        <button class="btn sm" onclick="editarUsuario('${u.id}')">Editar</button>
+        <button class="btn sm ${u.ativo?'d':'g'}" onclick="toggleAtivo('${u.id}')">${u.ativo?'Desativar':'Reativar'}</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="5" class="empty">Nenhum usuário.</td></tr>';
+}
+$('#usrBusca')?.addEventListener('input', renderUsuarios);
+
+$('#btnNovoUsr')?.addEventListener('click', async ()=>{
+  abrirModal('Novo responsável', `
+    <div class="note" style="margin-bottom:10px">
+      O Firebase Client SDK não cria contas de outros usuários. Siga o passo a passo:<br>
+      1) Crie a conta em <b>Firebase Console → Authentication → Add user</b>.<br>
+      2) Cole abaixo o UID gerado e preencha os dados.<br>
+      3) O documento <code>users/{uid}</code> será criado automaticamente.
+    </div>
+    <div class="form" id="usrForm">
+      <label>UID (do Firebase Auth)<input name="uid" required></label>
+      <label>Nome<input name="nome" required></label>
+      <label>E-mail<input name="email" type="email" required></label>
+      <label>Perfil<select name="perfil"><option value="responsavel">Responsável</option><option value="gestor">Gestor</option></select></label>
+    </div>
+    <div class="bar" style="margin-top:12px"><button class="btn p" id="usrSalvar">Criar</button></div>`);
+  $('#usrSalvar').onclick = async ()=>{
+    const f = $('#usrForm');
+    const uid = f.uid.value.trim();
+    if(!uid) return toast('Informe o UID', true);
+    try{
+      await db.collection('users').doc(uid).set({
+        nome: f.nome.value.trim(), email: f.email.value.trim(),
+        perfil: f.perfil.value, ativo: true,
+        criadoEm: serverTimestamp()
+      });
+      await logAuditoria('usuario_criado', `Usuário ${f.nome.value} criado como ${f.perfil.value}`, uid);
+      fecharModal(); await carregarCache(); renderUsuarios();
+      toast('Usuário criado.');
+    }catch(e){ toast('Erro: '+e.message, true); }
+  };
+});
+
+async function editarUsuario(uid){
+  const u = CACHE.usuarios.find(x=>x.id===uid); if(!u) return;
+  abrirModal('Editar usuário', `
+    <div class="form" id="usrEdit">
+      <label>Nome<input name="nome" value="${esc(u.nome||'')}"></label>
+      <label>E-mail<input name="email" value="${esc(u.email||'')}"></label>
+      <label>Perfil<select name="perfil">
+        <option value="responsavel" ${u.perfil==='responsavel'?'selected':''}>Responsável</option>
+        <option value="gestor" ${u.perfil==='gestor'?'selected':''}>Gestor</option>
+      </select></label>
+    </div>
+    <div class="bar" style="margin-top:12px"><button class="btn p" id="usrUpdate">Salvar</button></div>`);
+  $('#usrUpdate').onclick = async ()=>{
+    const f = $('#usrEdit');
+    await db.collection('users').doc(uid).update({
+      nome: f.nome.value.trim(), email: f.email.value.trim(), perfil: f.perfil.value
+    });
+    await logAuditoria('usuario_editado', `Usuário ${f.nome.value} atualizado`, uid);
+    fecharModal(); await carregarCache(); renderUsuarios();
+    toast('Atualizado.');
+  };
+}
+
+async function toggleAtivo(uid){
+  const u = CACHE.usuarios.find(x=>x.id===uid); if(!u) return;
+  const novo = !u.ativo;
+  if(!confirm(`${novo?'Reativar':'Desativar'} ${u.nome}?`)) return;
+  await db.collection('users').doc(uid).update({ ativo: novo });
+  await logAuditoria(novo?'usuario_reativado':'usuario_desativado',
+    `${u.nome} foi ${novo?'reativado':'desativado'}`, uid);
+  await carregarCache(); renderUsuarios();
+  toast(`Usuário ${novo?'reativado':'desativado'}.`);
+}
+
+/* ============================================================
+   12. PAINEL DO GESTOR
+   ============================================================ */
+function renderPainelGestor(){
+  if(!isGestor()) return;
+  const resp = $('#gFiltroResp')?.value || '';
+  const de = $('#gDe')?.value ? new Date($('#gDe').value) : null;
+  const ate = $('#gAte')?.value ? new Date($('#gAte').value + 'T23:59') : null;
+
+  let negs = CACHE.negociacoes.slice();
+  let ags = CACHE.agendas.slice();
+  if(resp){ negs = negs.filter(n=>n.responsavelId===resp); ags = ags.filter(a=>a.responsavelId===resp); }
+  if(de) { negs = negs.filter(n=>toDate(n.criadoEm)>=de); ags = ags.filter(a=>toDate(a.dataHora)>=de); }
+  if(ate){ negs = negs.filter(n=>toDate(n.criadoEm)<=ate); ags = ags.filter(a=>toDate(a.dataHora)<=ate); }
+
+  const agora = new Date();
+  const futuras = ags.filter(a=>a.status==='Agendada' && toDate(a.dataHora)>=agora).length;
+  const realizadas = ags.filter(a=>a.status==='Realizada').length;
+  const semAtualiz = negs.filter(n=>{
+    const t = toDate(n.ultimaInteracaoEm) || toDate(n.atualizadoEm) || new Date(0);
+    return (agora-t)/864e5 > 7;
+  }).length;
+  const followUps = negs.filter(n=>{
+    const d = toDate(n.proximoFollowUp);
+    return d && d>=agora && d-agora < 7*864e5;
+  }).length;
+
+  $('#gKpis').innerHTML = `
+    <div class="kpi"><b>${CACHE.usuarios.filter(u=>u.perfil==='responsavel').length}</b><span>Responsáveis</span></div>
+    <div class="kpi"><b>${negs.length}</b><span>Negociações no filtro</span></div>
+    <div class="kpi"><b>${futuras}</b><span>Reuniões futuras</span></div>
+    <div class="kpi"><b>${realizadas}</b><span>Reuniões realizadas</span></div>
+    <div class="kpi"><b>${semAtualiz}</b><span>Sem atualização 7+ dias</span></div>
+    <div class="kpi"><b>${followUps}</b><span>Próximos follow-ups (7d)</span></div>`;
+
+  const porResp = {};
+  ags.filter(a=>a.status==='Realizada').forEach(a=>{
+    const k = a.responsavelNome || a.responsavelId || '—';
+    porResp[k] = (porResp[k]||0)+1;
+  });
+  const maxR = Math.max(1, ...Object.values(porResp));
+  $('#gPorResp').innerHTML = Object.keys(porResp).length
+    ? Object.entries(porResp).map(([n,v])=>`<div class="hb"><i>${esc(n)}</i><div><span style="width:${v/maxR*100}%"></span></div>${v}</div>`).join('')
+    : '<div class="empty">Sem dados</div>';
+
+  $('#gParadas').innerHTML = negs.filter(n=>{
+    const t = toDate(n.ultimaInteracaoEm) || toDate(n.atualizadoEm) || new Date(0);
+    return (agora-t)/864e5 > 7;
+  }).slice(0,20).map(n=>`<tr>
+      <td>${esc(n.empresa)}</td><td>${esc(n.responsavelNome||'')}</td>
+      <td>${fmtDt(n.ultimaInteracaoEm||n.atualizadoEm)}</td>
+      <td><span class="tg">${esc(n.status)}</span></td>
+    </tr>`).join('') || '<tr><td colspan="4" class="empty">Nenhuma</td></tr>';
+
+  $('#gFollow').innerHTML = negs.filter(n=>{
+    const d = toDate(n.proximoFollowUp);
+    return d && d>=agora && d-agora < 7*864e5;
+  }).map(n=>`<tr>
+      <td>${esc(n.empresa)}</td><td>${esc(n.responsavelNome||'')}</td>
+      <td>${fmtDtH(n.proximoFollowUp)}</td>
+    </tr>`).join('') || '<tr><td colspan="3" class="empty">Nenhum</td></tr>';
+}
+$('#gFiltroResp')?.addEventListener('change', renderPainelGestor);
+$('#gDe')?.addEventListener('change', renderPainelGestor);
+$('#gAte')?.addEventListener('change', renderPainelGestor);
+$('#gAplicar')?.addEventListener('click', renderPainelGestor);
+
+/* ============================================================
+   13. AUDITORIA
+   ============================================================ */
+async function logAuditoria(tipo, descricao, alvoUid=null, detalhes={}){
+  if(!USUARIO) return;
+  try{
+    await db.collection('historico').add({
+      negociacaoId: null,
+      responsavelId: alvoUid || USUARIO.uid,
+      tipo: 'auditoria_' + tipo,
+      descricao,
+      dataHora: serverTimestamp(),
+      autorUid: USUARIO.uid,
+      autorNome: USUARIO.nome,
+      ...detalhes
+    });
+  }catch(e){ console.warn('Falha ao registrar auditoria', e); }
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+// Se o usuário já tiver sessão, o onAuthStateChanged cuida de iniciar.
+// A tela de login aparece automaticamente caso não haja sessão.
+
+/*
+============================================================================
+ FIRESTORE RULES — publique em firestore.rules e rode:
+   firebase deploy --only firestore:rules
+============================================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth()    { return request.auth != null; }
+    function userDoc()   { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isAtivo()   { return isAuth() && userDoc().ativo == true; }
+    function isGestor()  { return isAtivo() && userDoc().perfil == 'gestor'; }
+    function isOwner(uid){ return isAuth() && request.auth.uid == uid; }
+
+    match /users/{uid} {
+      allow read:   if isGestor() || isOwner(uid);
+      allow create: if isGestor();
+      allow update: if isGestor() ||
+        (isOwner(uid) &&
+         request.resource.data.perfil == resource.data.perfil &&
+         request.resource.data.ativo  == resource.data.ativo);
+      allow delete: if isGestor();
+    }
+
+    match /negociacoes/{id} {
+      allow read:   if isGestor() || (isAtivo() && resource.data.responsavelId == request.auth.uid);
+      allow create: if isGestor() || (isAtivo() && request.resource.data.responsavelId == request.auth.uid);
+      allow update, delete: if isGestor() || (isAtivo() && resource.data.responsavelId == request.auth.uid);
+    }
+
+    match /agendas/{id} {
+      allow read:   if isGestor() || (isAtivo() && resource.data.responsavelId == request.auth.uid);
+      allow create: if isGestor() || (isAtivo() && request.resource.data.responsavelId == request.auth.uid);
+      allow update, delete: if isGestor() || (isAtivo() && resource.data.responsavelId == request.auth.uid);
+    }
+
+    match /relatoriosReuniao/{id} {
+      allow read:   if isGestor() || (isAtivo() && resource.data.responsavelId == request.auth.uid);
+      allow create, update: if isGestor() || (isAtivo() && resource.data.responsavelId == request.auth.uid);
+      allow delete: if isGestor();
+    }
+
+    match /historico/{id} {
+      allow read:   if isGestor() || (isAtivo() && resource.data.responsavelId == request.auth.uid);
+      allow create: if isAtivo() && request.resource.data.responsavelId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /config/{id} {
+      allow read: if isAtivo();
+      allow write: if isGestor();
+    }
+
+    match /tipos/{id} {
+      allow read: if isAtivo();
+      allow write: if isGestor();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+*/
+</script>
+</body>
+</html>
